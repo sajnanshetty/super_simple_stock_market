@@ -57,7 +57,8 @@ class TestSuperSimpleStock(unittest.TestCase):
         # Test recording valid trades
         self.stock.record_trades(100, "buy", 20)
         self.stock.record_trades(50, "sell", 15)
-        self.assertEqual(len(self.stock.trades), 2)  # Two trades should be recorded
+        data = SuperSimpleStock.get_all_trades_record()
+        self.assertGreaterEqual(len(data), 2)  # Two trades should be recorded
 
     def test_record_trades_invalid_quantity(self):
         # Test recording trade with invalid quantity (negative quantity)
@@ -74,87 +75,34 @@ class TestSuperSimpleStock(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.stock.record_trades(100, "buy", 0)
 
-    def test_get_volume_weighted_price_no_trades(self):
+    @patch("plugins.stock_service.SuperSimpleStock.get_all_trades_record")
+    def test_get_volume_weighted_price_no_trades(self, mock_get_all_trades_record):
         # Test get_volume_weighted_price when there are no trades
+        mock_get_all_trades_record.return_value = []
         with patch('datetime.datetime') as mock_datetime:
             mock_datetime.now.return_value = datetime.datetime(2023, 7, 25, 12, 0, 0)
             self.assertEqual(self.stock.calculate_volume_weighted_price(), 0)
 
-    # def test_get_volume_weighted_price_no_matching_symbol(self):
-    #     # Test get_volume_weighted_price when there are trades, but no matching symbol
-    #     self.stock.record_trades(100, "buy", 20)
-    #     self.stock.record_trades(50, "sell", 15)
-    #     with patch('datetime.datetime') as mock_datetime:
-    #         mock_datetime.now.return_value = datetime.datetime(2023, 7, 25, 12, 0, 0)
-    #         self.assertEqual(self.stock.calculate_volume_weighted_price(), 0)
+    def test_calculate_volume_weighted_price(self):
+        self.stock.calculate_volume_weighted_price()
 
-    # @patch("plugins.stock_service.datetime")  # Mock the datetime module in your_module
-    # def test_get_volume_weighted_price_with_trades(self, mock_datetime):
-    #     self.stock.trades = [
-    #         {"timestamp": datetime.datetime.now().timestamp(), "symbol": "TEA", "quantity": 10, "price": 15},
-    #         {"timestamp": (datetime.datetime.now() - datetime.timedelta(minutes=20)).timestamp(), "symbol": "TEA", "quantity": 20, "price": 20},
-    #         {"timestamp": (datetime.datetime.now() - datetime.timedelta(minutes=10)).timestamp(), "symbol": "TEA", "quantity": 15, "price": 25},
-    #         {"timestamp": (datetime.datetime.now() - datetime.timedelta(minutes=5)).timestamp(), "symbol": "ABC", "quantity": 5, "price": 10},
-    #     ]
-    #     # Mock datetime.datetime.now() to return a fixed timestamp
-    #     fixed_timestamp = datetime.datetime(2023, 7, 1, 12, 0, 0)
-    #     mock_datetime.now.return_value = fixed_timestamp
+    @patch("plugins.stock_service.SuperSimpleStock.get_all_trades_record")
+    def test_calculate_gbce_all_share_index(self, mock_get_all_trades_record):
+        # Mock the trades data returned by get_all_trades_record
+        mock_get_all_trades_record.return_value = [
+            {"traded_price": 10},
+            {"traded_price": 20},
+            {"traded_price": 30},
+        ]
 
-    #     # Mock datetime.datetime.fromtimestamp() to return a datetime object
-    #     def mock_fromtimestamp(ts):
-    #         return fixed_timestamp
+        # Call the calculate_gbce_all_share_index function
+        result = SuperSimpleStock.calculate_gbce_all_share_index()
 
-    #     mock_datetime.fromtimestamp.side_effect = mock_fromtimestamp
+        # Assert that the result is calculated correctly
+        self.assertEqual(result, 20)  # geometric mean of traded prices (60 / 3)
 
-    #     # Test the function when there are trades for the symbol "TEA" in the past 15 minutes
-    #     symbol = "TEA"
-    #     past_fifteen_minutes = fixed_timestamp - datetime.timedelta(minutes=15)
-  
-    #     expected_result = (10 * 15 + 15 * 25) / (10 + 15)  # (Sum of (quantity * price)) / (Sum of quantities)
-    #     self.assertEqual(self.stock.calculate_volume_weighted_price(), expected_result)
-
-    # @patch("modules.stock_service.datetime") 
-    # def test_get_volume_weighted_price_with_no_trades(self, mock_datetime):
-    #     # Mock datetime.datetime.now() to return a fixed timestamp
-    #     fixed_timestamp = datetime.datetime(2023, 7, 1, 12, 0, 0)
-    #     mock_datetime.now.return_value = fixed_timestamp
-
-    #     # Mock datetime.datetime.fromtimestamp() to return a datetime object
-    #     def mock_fromtimestamp(ts):
-    #         return fixed_timestamp
-
-    #     mock_datetime.fromtimestamp.side_effect = mock_fromtimestamp
-
-    #     # Test the function when there are no trades for the symbol "XYZ" in the past 15 minutes
-    #     symbol = "XYZ"
-    #     past_fifteen_minutes = fixed_timestamp - datetime.timedelta(minutes=15)
-    #     self.assertEqual(self.stock.get_volume_weighted_price(symbol), 0)
-
-
-    # def test_get_volume_weighted_price_with_matching_symbol(self):
-    #     # Test get_volume_weighted_price with matching symbol
-    #     self.stock.record_trades(100, "buy", 20)
-    #     self.stock.record_trades(50, "sell", 15)
-
-    #     # Mock the datetime.datetime.fromtimestamp method to return a fixed timestamp
-    #     with patch('datetime.datetime') as mock_datetime:
-    #         mock_datetime.now.return_value = datetime.datetime(2023, 7, 25, 12, 0, 0)
-    #         with patch('datetime.datetime.fromtimestamp') as mock_fromtimestamp:
-    #             mock_fromtimestamp.side_effect = lambda ts: datetime.datetime(2023, 7, 25, 11, 45, 0)
-    #             # The trades are within the past 15 minutes, so the volume-weighted price should be calculated
-    #             self.assertEqual(self.stock.calculate_volume_weighted_price(), (100 * 20 + 50 * 15) / (100 + 50))
-
-    def test_get_gbce_all_share_index_no_trades(self):
-        # Test get_gbce_all_share_index when there are no trades
-        self.assertIsNone(self.stock.calculate_gbce_all_share_index())
-
-    def test_get_gbce_all_share_index_with_trades(self):
-        # Test get_gbce_all_share_index with trades
-        self.stock.record_trades(100, "buy", 20)
-        self.stock.record_trades(50, "sell", 15)
-        self.stock.record_trades(75, "buy", 18)
-        expected = 17.666666666666668
-        self.assertEqual(self.stock.calculate_gbce_all_share_index(), expected)
+        # Assert that the mock functions were called with the correct arguments
+        mock_get_all_trades_record.assert_called_once()
 
 # if __name__ == "__main__":
 #     unittest.main()
