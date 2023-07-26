@@ -71,7 +71,7 @@ tests suits are in tests/test_stock_service.py to run it
 ```
 python -m unittest tests.test_stock_service
 ```
-                   or
+or
 ```
 python run_tests.py
 ```
