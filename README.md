@@ -19,7 +19,7 @@ traded price
 
 2.	No database or GUI is required, all data need only be held in memory
 
-3. No prior knowledge of stock markets or trading is required – all formulas are provided below.
+3. No prior knowledge of stock markets or trading is required – all formulas are provided.
 
 ## Table1. Sample data from the Global Beverage Corporation Exchange
 
