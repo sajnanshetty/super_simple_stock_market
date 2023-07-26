@@ -76,6 +76,8 @@ or
 python run_tests.py
 ```
 
+Note: Unit tests are executed in the GitHub workflow for any pull request or push to the repository.
+
 ## Author
 
 Sajna N Shetty
