@@ -1,6 +1,6 @@
 import datetime
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 from plugins.stock_service import SuperSimpleStock
 
 class TestSuperSimpleStock(unittest.TestCase):
@@ -103,6 +103,71 @@ class TestSuperSimpleStock(unittest.TestCase):
 
         # Assert that the mock functions were called with the correct arguments
         mock_get_all_trades_record.assert_called_once()
+    
+    @patch("plugins.stock_service.open", new_callable=mock_open, read_data="")  # Mock 'open' to return an empty file
+    @patch("plugins.stock_service.pickle.dump")  # Mock 'pickle.dump'
+    @patch("plugins.stock_service.pickle.load")  # Mock 'pickle.dump'
+    def test_store_trade_data(self, mock_load, mock_pickle_dump, mock_open):
+
+        # Call the method with some sample trade data
+        sample_trade = {"symbol": "AAPL", "quantity": 10, "price": 150}
+        SuperSimpleStock.store_trade_data(sample_trade)
+
+        # Check if 'open' was called twice with the correct file name and mode
+        mock_open.assert_called_with("trades.pickle", "wb")
+        self.assertEqual(mock_open.call_count, 2)  # Ensure it's called twice (once for reading, once for writing)
+
+        # Check if 'pickle.dump' was called once with the correct arguments
+        mock_pickle_dump.assert_called()
+
+    @patch("plugins.stock_service.open", new_callable=mock_open, read_data="")
+    @patch("plugins.stock_service.pickle.load")
+    def test_get_all_trades_record(self, mock_pickle_load, mock_open):
+        # Prepare a mock trades data to be returned by pickle.load
+        mock_trades_data = [{"symbol": "AAPL", "quantity": 10, "price": 150},
+                            {"symbol": "GOOG", "quantity": 5, "price": 250}]
+
+        # Mock 'open' to return an empty file-like object
+        mock_open.return_value.__enter__.return_value = mock_open()
+        
+        # Mock 'pickle.load' to return the mock_trades_data
+        mock_pickle_load.return_value = mock_trades_data
+
+        # Call the method
+        result = SuperSimpleStock.get_all_trades_record()
+
+        # Check if 'open' was called once with the correct file name and mode
+        mock_open.assert_called_with("trades.pickle", "rb")
+
+        # Check if 'pickle.load' was called once
+        mock_pickle_load.assert_called_once()
+
+        # Check if the result matches the expected mock_trades_data
+        self.assertEqual(result, mock_trades_data)
+
+    @patch("plugins.stock_service.open", new_callable=mock_open, read_data='{"key": "value"}')  # Replace with sample JSON data
+    @patch("plugins.stock_service.json.load")
+    def test_get_gbce_data(self, mock_json_load, mock_open):
+        # Prepare the mock data to be returned by json.load
+        mock_data = {"key": "value"}
+
+        # Mock 'open' to return an empty file-like object
+        mock_open.return_value.__enter__.return_value = mock_open()
+        
+        # Mock 'json.load' to return the mock_data
+        mock_json_load.return_value = mock_data
+
+        # Call the method
+        result = SuperSimpleStock.get_gbce_data()
+
+        # Check if 'open' was called once with the correct file name and mode
+        mock_open.assert_called_with('plugins/gbce_data.json', 'r', encoding="utf-8")
+
+        # Check if 'json.load' was called once
+        mock_json_load.assert_called_once()
+
+        # Check if the result matches the expected mock_data
+        self.assertEqual(result, mock_data)
 
 # if __name__ == "__main__":
 #     unittest.main()
