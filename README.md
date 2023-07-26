@@ -51,14 +51,14 @@ Input required on console window:
 
 ```
 Select a number for corresponding operation for a given a Stock:
-                                ==============================================================================================
-                                1 Given any price as input, calculates the dividend yield
-                                2 Given any price as input, calculates the P/E Ratio
-                                3 Record a trade, with timestamp, quantity of shares, buy or sell indicator and traded price
-                                4 Calculates Volume Weighted Stock Price based on trades in past 15 minutes
-                                5 Calculatesthe GBCE All Share Index using the geometric mean of prices for all stocks
-                                0 To exit, if you are done with all the operations.
-                                ==============================================================================================
+    ==============================================================================================
+    1 Given any price as input, calculates the dividend yield
+    2 Given any price as input, calculates the P/E Ratio
+    3 Record a trade, with timestamp, quantity of shares, buy or sell indicator and traded price
+    4 Calculates Volume Weighted Stock Price based on trades in past 15 minutes
+    5 Calculatesthe GBCE All Share Index using the geometric mean of prices for all stocks
+    0 To exit, if you are done with all the operations.
+    ==============================================================================================
 ```
 
 Choose the option according to the need.
